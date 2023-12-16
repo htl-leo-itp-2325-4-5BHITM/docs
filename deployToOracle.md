@@ -11,6 +11,8 @@ Der langform befehl wäre `ssh -i <private_key_file> user@server` also `ssh -i i
 \
  Mit `exit` kann man die ssh verbindung Verlassen.
 
+Falls ein Screen prozess im Hintergrund läuft und nicht von selbst stopt: `pkill screen`
+
 ## Ubuntu Instanz erstellen
 1. auf `oracle.com/cloud` einloggen
 2. unter compute > instances eine neue Instanz anlegen
@@ -70,14 +72,15 @@ Der langform befehl wäre `ssh -i <private_key_file> user@server` also `ssh -i i
 
 ## Quarkus anpassen
 1. in den application.propperties die line `quarkus.package.type=uber-jar` hinzufügen
-2. falls noch nicht in den einzelnen resources davor `quarkus.http.root-path=/api` hinzufügen
+2. falls noch nicht vorhanden `quarkus.hibernate-orm.sql-load-script=import.sql` ergänzen (nur relevant wenn ihr ein sql import skript verwendet)
+3. falls noch nicht in den einzelnen resources davor `quarkus.http.root-path=/api` hinzufügen
    - macht einfach /api vor jede route
    - aburger mag das wenn es so gelöst ist und nicht in den einzelnen resources
-3. terminal im backend öffnen
-4. `mvn clean package` oder `./mvnw clean package`
-5. wenn ein test error `./mvnw -D skipTests=true clean package`
-6. in den backend/target folder cd'n
-7. `scp <dein-jar-file> <project-name>:` (gleicher name wie oben im config file)
+4. terminal im backend öffnen
+5. `mvn clean package` oder `./mvnw clean package`
+6. wenn ein test error `./mvnw -D skipTests=true clean package`
+7. in den backend/target folder cd'n
+8. `scp <dein-jar-file> <project-name>:` (gleicher name wie oben im config file)
 
 ## Nginx configuration
 1. `cd /etc/nginx/sites-available` 
@@ -96,7 +99,6 @@ Der langform befehl wäre `ssh -i <private_key_file> user@server` also `ssh -i i
    ```
 4. strg+x, y, enter
 5. `sudo systemctl restart nginx`
-6. 
 
 ## Postgres auf der VM
 1. `screen`
@@ -139,6 +141,5 @@ Der langform befehl wäre `ssh -i <private_key_file> user@server` also `ssh -i i
 Temporäre Lösung die in Zukunft automatisiert wird
 1. Nach [Quarkus anpassen 3.-7.](#quarkus-anpassen) ein jar file packagen und auf den server laden
 2. Über ssh auf die Instanz verbinden und `java -jar <dein-jar-file>`
-3. 
 
 jetzt sollte euer projekt am server laufen
