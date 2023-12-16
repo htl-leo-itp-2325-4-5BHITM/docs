@@ -1,9 +1,11 @@
 # Deployen zur Leocloud
 
-## generelles
-alles was `<zwischen spizklammern>` steht muss durch irgendwas ersetzt werden. Immer auch die spizklammern ersetzten und wenn vorhanden das trennzeichen "-" oder so beachten. `<dein-name>` wird zu `yanik-kendler`
+## Generelles
+Alles was `<zwischen spizklammern>` steht muss durch irgendwas ersetzt werden. Immer auch die spizklammern ersetzten und wenn vorhanden das trennzeichen "-" oder so beachten. `<dein-name>` wird zu `yanik-kendler`
 
-Screen ist eine utility für den install von sachen, dass die nicht abgebrochen werden wenn der user disconnected. Alle apt installs sollten im `screen` ausgeführt werden. Mit `exit` kann man screen verlassen.
+Screen ist eine utility für den install von sachen, dass die nicht abgebrochen werden wenn der user von ssh disconnected. Alle apt installs sollten im `screen` ausgeführt werden. Mit `exit` kann man screen verlassen.
+\
+Falls ein Screen prozess im Hintergrund läuft und nicht von selbst stopt: `pkill screen` killt alle screens.
 
 Mit ssh kann man sich auf einen Server verbinden. In unserem fall ist der Server so konfiguriert, dass er nur Verbindungen zulässt die den passenden private key zum angegebenen public key haben.
 \
@@ -11,7 +13,7 @@ Der langform befehl wäre `ssh -i <private_key_file> user@server` also `ssh -i i
 \
  Mit `exit` kann man die ssh verbindung Verlassen.
 
-Falls ein Screen prozess im Hintergrund läuft und nicht von selbst stopt: `pkill screen`
+**Info**: die meisten Befehle sollten auf allen Betriebsystemen identisch sein, alle auf der VM sind OS unabhängig. Manche der windows befehle sind vlt auf mac/linux anders.
 
 ## Ubuntu Instanz erstellen
 1. auf `oracle.com/cloud` einloggen
@@ -24,7 +26,7 @@ Falls ein Screen prozess im Hintergrund läuft und nicht von selbst stopt: `pkil
    4. 22.04 Minimal
 5. "add ssh keys"
    1. "paste public keys" auswählen
-   2. entweder wenn ihr auf linux arbeitet einen vorhanden public key pasten oder auf windows einen erstellen
+   2. entweder einen vorhanden public key pasten oder einen erstellen (geht auch auf windows)
       1. terminal öffnen
       2. im user directory in .ssh ordner wechseln bzw erstellen
       3. `ssh-keygen` ausführen
@@ -44,7 +46,7 @@ Falls ein Screen prozess im Hintergrund läuft und nicht von selbst stopt: `pkil
    3. Add
 
 ## SSH verbindung einrichten
-1. In oracle - burger menu - pinned>instances - deine instanz - unter "Instance access" ip kopieren
+1. In oracle - burger menu - pinned>instances - `<deine-instanz>` - unter "Instance access" ip kopieren
 2. in vscode im .ssh ordner(c:/users/name/.ssh) ein file "config" erstellen und folgendes einfügen 
    ```
    Host <project-name>
@@ -68,24 +70,11 @@ Falls ein Screen prozess im Hintergrund läuft und nicht von selbst stopt: `pkil
 15. str+x
 16. y
 17. enter
-18. `sudo systemctl start nginx`
 
-## Quarkus anpassen
-1. in den application.propperties die line `quarkus.package.type=uber-jar` hinzufügen
-2. falls noch nicht vorhanden `quarkus.hibernate-orm.sql-load-script=import.sql` ergänzen (nur relevant wenn ihr ein sql import skript verwendet)
-3. falls noch nicht in den einzelnen resources davor `quarkus.http.root-path=/api` hinzufügen
-   - macht einfach /api vor jede route
-   - aburger mag das wenn es so gelöst ist und nicht in den einzelnen resources
-4. terminal im backend öffnen
-5. `mvn clean package` oder `./mvnw clean package`
-6. wenn ein test error `./mvnw -D skipTests=true clean package`
-7. in den backend/target folder cd'n
-8. `scp <dein-jar-file> <project-name>:` (gleicher name wie oben im config file)
-
-## Nginx configuration
+## Nginx configuration (temporäre Lösung)
 1. `cd /etc/nginx/sites-available` 
 2. `sudo nano default`
-3. nach unten scrollen und unter "location / {..}" folgendes einfügen
+3. nach unten scrollen und unter "location / {... }" folgendes einfügen
     ```
    location /api/ {
       proxy_pass http://localhost:8080;
@@ -98,16 +87,15 @@ Falls ein Screen prozess im Hintergrund läuft und nicht von selbst stopt: `pkil
    }
    ```
 4. strg+x, y, enter
-5. `sudo systemctl restart nginx`
+5. `sudo systemctl start nginx` bzw  `sudo systemctl restart nginx`
 
 ## Postgres auf der VM
 1. `screen`
-2. `sudo apt install postgresql` 
-3. y
-4. bei der restart abfrage `15` restarten
-5. `exit` (screen)
-6. `sudo su - postgres`
-7. `nano setup.sql`
+2. `sudo apt install postgresql` y bzw yes
+3. bei der restart abfrage `15` restarten
+4. `exit` (screen)
+5. `sudo su - postgres`
+6. `nano setup.sql`
    ```
    create database <projectname>;
 
@@ -115,11 +103,26 @@ Falls ein Screen prozess im Hintergrund läuft und nicht von selbst stopt: `pkil
 
    alter user <projectname> with superuser;
    ```
-8. strg+x, y, enter
-9. `plsql -f setup.sql`
+7. strg+x
+8. y
+9. enter
+10. `plsql -f setup.sql`
+
+## Quarkus anpassen
+1. in den application.propperties die line `quarkus.package.type=uber-jar` hinzufügen
+2. falls noch nicht vorhanden `quarkus.hibernate-orm.sql-load-script=import.sql` ergänzen (nur relevant wenn ihr ein import.sql skript verwendet)
+3. falls noch nicht in den einzelnen resources "api" vorm pfad steht `quarkus.http.root-path=/api` hinzufügen
+   - aberger mag das wenn es so gelöst ist und nicht in den einzelnen resources
+4. terminal im backend öffnen
+5. `mvn clean package` oder `./mvnw clean package`
+6. wenn ein test error `mvn -D skipTests=true clean package` oder `./mvnw -D skipTests=true clean package`
+   \
+   *(wenn anderer error gehts auch über IntelliJ)*
+7. in den target folder cd'n
+8. `scp <dein-jar-runner-file> <project-name>:` (gleicher name wie oben im config file)
 
 ## Java auf der VM
-1. im terminal am server
+1. im terminal am server:
 2. `screen`
 3. `sudo apt list | grep jre`
 4. openJDK version 21 headless bis zum leerzeichen kopieren (ohne datum und "amd..")
@@ -129,6 +132,15 @@ Falls ein Screen prozess im Hintergrund läuft und nicht von selbst stopt: `pkil
 8. `exit` (screen)
 9. `java -jar <dein-jar-file>`
 
+Euer Projekt sollte jetzt am Server laufen: Kann getestet werden indem ihr die `<ip.des.servers>/api/<euer/api/pfad>` im browser eingebt.. der Browser kann aber nur GET requests stellen. Für komplexere routen einfach ein .http file anlegen und dort den POST ausführen.
+\
+Ihr könnt theoretisch auch euer Frontend schon hoch pushen bringt aber gerade nichts.
+
+## Änderungen am Projekt zum Server pushen
+Temporäre Lösung die in Zukunft automatisiert wird
+1. Nach [Quarkus anpassen 3.-7.](#quarkus-anpassen) ein jar file packagen und auf den server laden
+2. Über ssh auf die Instanz verbinden und `java -jar <dein-jar-file>`
+
 ## Teammitglieder Serverzugriff gewähren
 1. Auf dem Rechner des Teammitglieds einen vorhandenen public key kopieren oder nach [Ubuntu instanz erstellen 5.2](#ubuntu-instanz-erstellen) einen erstellen und an den Instanz Besitzter senden
 2. auf dem Besitzter Rechner auf die Instanz ssh'n `ssh <project-name>`
@@ -136,10 +148,3 @@ Falls ein Screen prozess im Hintergrund läuft und nicht von selbst stopt: `pkil
 4. nano authorized_keys
 5. ACHTUNG: wenn ihr die erste Zeile aus diesem File löscht oder verändert könnt ihr nicht mehr auf die Instanz zugreifen.
 6. in einer neuen zeile den public key des teammitglieds einfügen (rechtsklick)
-
-## Änderungen am Projekt zum Server pushen
-Temporäre Lösung die in Zukunft automatisiert wird
-1. Nach [Quarkus anpassen 3.-7.](#quarkus-anpassen) ein jar file packagen und auf den server laden
-2. Über ssh auf die Instanz verbinden und `java -jar <dein-jar-file>`
-
-jetzt sollte euer projekt am server laufen
