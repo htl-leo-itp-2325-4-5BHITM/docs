@@ -32,7 +32,7 @@ Der langform befehl wäre `ssh -i <private_key_file> user@server` also `ssh -i i
       3. `ssh-keygen` ausführen
          1. key name leer lassen
          2. passphrase leer lassen
-      4. `code .` ausführen und inhalt von oracle.pub kopieren
+      4. `code .` ausführen und inhalt von id_rsa.pub kopieren
       5. in inputfeld pasten
 6. "create"
 
